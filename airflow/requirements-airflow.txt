@@ -1,0 +1,17 @@
+# HTTP client
+httpx>=0.27.0
+
+# Database (Airflow 3.0 requires SQLAlchemy < 2.0)
+sqlalchemy>=1.4.0,<2.0.0
+psycopg2-binary>=2.9.0
+
+# Data validation
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Date parsing
+python-dateutil>=2.8.0
+
+# PDF processing
+pypdfium2>=4.0.0
+docling>=2.0.0

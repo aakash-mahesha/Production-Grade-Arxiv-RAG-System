@@ -1,6 +1,6 @@
 from .ask import AskRequest, AskResponse, PaperSource
-from .health import HealthResponse
-from .paper import PaperCreate, PaperResponse, PaperSearchResponse
+from .api.health import HealthResponse
+from .arxiv.paper import PaperCreate, PaperResponse, PaperSearchResponse, ArxivPaper
 
 __all__ = [
     "AskRequest",
@@ -10,4 +10,5 @@ __all__ = [
     "PaperCreate",
     "PaperResponse",
     "PaperSearchResponse",
+    "ArxivPaper"
 ]
