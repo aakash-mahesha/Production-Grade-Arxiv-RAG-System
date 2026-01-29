@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from src.config import get_settings
 from src.db.factory import make_database
+from src.services.arxiv.factory import make_arxiv_client
+from src.services.pdf_parser.factory import make_pdf_parser_service
 
 # Week 1: No complex middleware needed
 from src.routers import ask, papers, ping
@@ -31,9 +33,11 @@ async def lifespan(app: FastAPI):
     logger.info("Database connected")
 
     # Placeholders for future weeks
-    app.state.pdf_parser_service = None
-    app.state.opensearch_service = None
+    app.state.arxiv_client = make_arxiv_client()
+    app.state.pdf_parser = make_pdf_parser_service()
     app.state.llm_service = None
+
+    logger.info("Services initialized: arXiv API client, PDF parser")
 
     logger.info("API ready")
     yield
@@ -47,14 +51,12 @@ app = FastAPI(
     title="arXiv Paper Curator API",
     description="Personal arXiv CS.AI paper curator with RAG capabilities",
     version=os.getenv("APP_VERSION", "0.1.0"),
-    root_path="/api/v1",
     lifespan=lifespan,
 )
 
 # Include routers
-app.include_router(ping.router)
-app.include_router(papers.router)
-app.include_router(ask.router)
+app.include_router(ping.router, prefix="/api/v1")
+app.include_router(papers.router, prefix="/api/v1")
 
 
 if __name__ == "__main__":

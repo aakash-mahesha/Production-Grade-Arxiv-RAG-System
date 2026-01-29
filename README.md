@@ -61,6 +61,10 @@ This project implements a full-stack RAG pipeline for processing and querying ac
 - **Dependency Injection** for clean, testable code
 - **Docker Compose** orchestration with health checks for all services
 - **Airflow Integration** for data pipeline orchestration
+- **arXiv Paper Ingestion** - Automated fetching of papers from arXiv API
+- **PDF Parsing with Docling** - Extract structured content from academic PDFs
+- **Sequential Pipeline Processing** - Memory-efficient one-at-a-time PDF processing
+- **Immediate DB Updates** - Papers saved to database as soon as parsed (no batch waiting)
 
 ### Design Patterns Used
 
@@ -92,12 +96,15 @@ src/
 │   └── paper.py           # Paper entity model
 │
 ├── schemas/               # Pydantic request/response schemas
-│   ├── paper.py           # Paper schemas (Create, Response)
-│   ├── health.py          # Health check schemas
-│   └── ask.py             # Q&A schemas
+│   ├── api/               # API response schemas
+│   │   └── health.py      # Health check schemas
+│   ├── arxiv/             # arXiv data schemas
+│   │   └── paper.py       # ArxivPaper, PaperCreate schemas
+│   └── pdf_parser/        # PDF parsing schemas
+│       └── models.py      # PdfContent, ParsedPaper schemas
 │
 ├── repositories/          # Data access layer
-│   └── paper.py           # Paper repository (CRUD operations)
+│   └── paper.py           # Paper repository (CRUD + upsert)
 │
 ├── routers/               # API route handlers
 │   ├── ping.py            # Health endpoints
@@ -105,9 +112,23 @@ src/
 │   └── ask.py             # RAG query endpoint
 │
 └── services/              # Business logic services
+    ├── arxiv/             # arXiv API client
+    │   └── client.py      # Fetch papers, download PDFs
+    ├── metadata_fetcher.py # Pipeline orchestrator
     ├── ollama/            # LLM client
     ├── opensearch/        # Vector search service
     └── pdf_parser/        # Document processing
+        ├── docling.py     # Docling PDF parser
+        └── parser.py      # Parser service wrapper
+
+airflow/
+├── Dockerfile             # Custom Airflow image with dependencies
+├── entrypoint.sh          # Container entrypoint script
+├── requirements-airflow.txt # Airflow Python dependencies
+└── dags/
+    ├── arxiv_paper_ingestion.py  # Main DAG definition
+    └── arxiv_ingestion/
+        └── tasks.py       # Task functions for paper processing
 ```
 
 ## Getting Started
@@ -249,10 +270,11 @@ make test
 
 ## Roadmap
 
-- [ ] **Phase 2**: PDF parsing with Docling
-- [ ] **Phase 3**: OpenSearch vector indexing
-- [ ] **Phase 4**: LLM integration for RAG queries
-- [ ] **Phase 5**: Airflow DAGs for arXiv paper ingestion
+- [x] **Phase 1**: FastAPI setup with PostgreSQL, health checks, CRUD endpoints
+- [x] **Phase 2**: PDF parsing with Docling (optimized for academic papers)
+- [x] **Phase 3**: Airflow DAGs for arXiv paper ingestion pipeline
+- [ ] **Phase 4**: OpenSearch vector indexing
+- [ ] **Phase 5**: LLM integration for RAG queries
 - [ ] **Phase 6**: Production deployment with Kubernetes
 
 ## License

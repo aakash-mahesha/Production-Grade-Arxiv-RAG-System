@@ -7,6 +7,8 @@ from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 from src.config import Settings
 from src.db.interfaces.base import BaseDatabase
+from src.services.arxiv.client import ArxivClient
+from src.services.pdf_parser.parser import PDFParserService
 
 # Week 1: Simplified - no API key authentication needed for local learning
 
@@ -33,9 +35,14 @@ def get_db_session(database: Annotated[BaseDatabase, Depends(get_database)]) -> 
 
 
 # Week 2+: PDF parser service (not implemented in Week 1)
-def get_pdf_parser_service(request: Request):
-    """Get PDF parser service from app state (Week 2+ - not implemented yet)."""
-    return None
+def get_arxiv_client(request: Request) -> ArxivClient:
+    """Get ArXiv client from app state."""
+    return request.app.state.arxiv_client
+
+
+def get_pdf_parser(request: Request) -> PDFParserService:
+    """Get PDF parser service from app state."""
+    return request.app.state.pdf_parser
 
 
 # Week 1: OpenSearch service (placeholder - full implementation in Week 3+)
@@ -55,7 +62,9 @@ def get_llm_service(request: Request):
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 DatabaseDep = Annotated[BaseDatabase, Depends(get_database)]
 SessionDep = Annotated[Session, Depends(get_db_session)]
-PDFParserServiceDep = Annotated[object, Depends(get_pdf_parser_service)]
+PDFParserServiceDep = Annotated[object, Depends(get_pdf_parser)]
+ArxivClientDep = Annotated[ArxivClient, Depends(get_arxiv_client)]
 OpenSearchServiceDep = Annotated[object, Depends(get_opensearch_service)]
+
 # Phase 3: LLM service dependency (not used in Phase 2)
 # LLMServiceDep = Annotated[object, Depends(get_llm_service)]
