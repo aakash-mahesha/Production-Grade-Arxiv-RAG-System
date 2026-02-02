@@ -1,7 +1,11 @@
 from typing import List
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path
 
+
+PROJECT_ROOT = Path(__file__).parent.parent
+ENV_FILE_PATH = PROJECT_ROOT / ".env"
 class DefaultSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -25,15 +29,32 @@ class ArxivSettings(DefaultSettings):
     timeout_seconds: int = 30
     max_results: int = 100
     search_category: str = "cs.AI"  # Default category to search
+    max_concurrent_downloads: int = 5  # Max parallel PDF downloads
+    max_concurrent_parsing: int = 1  # Max parallel PDF parsing (keep low for memory)
 
     
 class PDFParserSettings(DefaultSettings):
     """PDF parser service settings."""
 
-    max_pages: int = 15  # Reduced for faster processing
+    max_pages: int = 25  # Reduced for faster processing
     max_file_size_mb: int = 20
     do_ocr: bool = False
     do_table_structure: bool = True
+
+class OpenSearchSettings(DefaultSettings):
+    """Opensearch settings"""
+    model_config = SettingsConfigDict(
+        env_file=[".env", str(ENV_FILE_PATH)],
+        env_prefix="OPENSEARCH__",
+        extra="ignore",
+        frozen=True,
+        case_sensitive=False,
+    )
+
+    host: str = "http://opensearch:9200"  # Docker service name for container-to-container
+    index_name: str = "arxiv-papers"
+    max_text_size: int = 1000000  # Max chars of raw_text to index
+
 class Settings(DefaultSettings):
     app_version: str = "0.0.1"
     debug: bool = True
@@ -54,6 +75,8 @@ class Settings(DefaultSettings):
 
     arxiv: ArxivSettings = Field(default_factory=ArxivSettings)
     pdf_parser: PDFParserSettings = Field(default_factory=PDFParserSettings)
+
+    opensearch: OpenSearchSettings = Field(default_factory=OpenSearchSettings)
 
     @field_validator("ollama_models", mode = "before")
     @classmethod

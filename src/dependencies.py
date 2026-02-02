@@ -9,6 +9,7 @@ from src.config import Settings
 from src.db.interfaces.base import BaseDatabase
 from src.services.arxiv.client import ArxivClient
 from src.services.pdf_parser.parser import PDFParserService
+from src.services.opensearch.client import OpenSearchClient
 
 # Week 1: Simplified - no API key authentication needed for local learning
 
@@ -46,9 +47,9 @@ def get_pdf_parser(request: Request) -> PDFParserService:
 
 
 # Week 1: OpenSearch service (placeholder - full implementation in Week 3+)
-def get_opensearch_service(request: Request):
+def get_opensearch_service(request: Request) -> OpenSearchClient:
     """Get OpenSearch service from app state (Week 3+ - placeholder for Week 1)."""
-    return getattr(request.app.state, "opensearch_service", None)
+    return request.app.state.opensearch_client
 
 
 # Phase 3: LLM service (skeleton only)
