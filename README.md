@@ -65,6 +65,8 @@ This project implements a full-stack RAG pipeline for processing and querying ac
 - **PDF Parsing with Docling** - Extract structured content from academic PDFs
 - **Sequential Pipeline Processing** - Memory-efficient one-at-a-time PDF processing
 - **Immediate DB Updates** - Papers saved to database as soon as parsed (no batch waiting)
+- **OpenSearch Integration** - Full-text BM25 search across paper content
+- **Search API** - REST endpoint for searching papers by keywords
 
 ### Design Patterns Used
 
@@ -109,6 +111,7 @@ src/
 ├── routers/               # API route handlers
 │   ├── ping.py            # Health endpoints
 │   ├── papers.py          # Paper CRUD endpoints
+│   ├── search.py          # Search endpoints (BM25)
 │   └── ask.py             # RAG query endpoint
 │
 └── services/              # Business logic services
@@ -116,10 +119,18 @@ src/
     │   └── client.py      # Fetch papers, download PDFs
     ├── metadata_fetcher.py # Pipeline orchestrator
     ├── ollama/            # LLM client
-    ├── opensearch/        # Vector search service
+    ├── opensearch/        # Full-text search service
+    │   ├── client.py      # OpenSearch client
+    │   ├── factory.py     # Client factory
+    │   ├── query_builder.py # BM25 query builder
+    │   └── index_config.py # Index mappings
     └── pdf_parser/        # Document processing
         ├── docling.py     # Docling PDF parser
         └── parser.py      # Parser service wrapper
+
+scripts/
+├── manual_ingest.py       # Manual paper ingestion script
+└── test_search.py         # Test OpenSearch search
 
 airflow/
 ├── Dockerfile             # Custom Airflow image with dependencies
@@ -219,6 +230,18 @@ GET /papers/{paper_id}
 POST /papers
 ```
 
+### Search (BM25)
+
+```bash
+# Search papers by keyword
+POST /search
+{
+  "query": "transformer attention mechanism",
+  "size": 10
+}
+# Response: Matching papers ranked by BM25 score
+```
+
 ### Ask (RAG Query)
 
 ```bash
@@ -273,7 +296,7 @@ make test
 - [x] **Phase 1**: FastAPI setup with PostgreSQL, health checks, CRUD endpoints
 - [x] **Phase 2**: PDF parsing with Docling (optimized for academic papers)
 - [x] **Phase 3**: Airflow DAGs for arXiv paper ingestion pipeline
-- [ ] **Phase 4**: OpenSearch vector indexing
+- [x] **Phase 4**: OpenSearch BM25 search integration
 - [ ] **Phase 5**: LLM integration for RAG queries
 - [ ] **Phase 6**: Production deployment with Kubernetes
 
