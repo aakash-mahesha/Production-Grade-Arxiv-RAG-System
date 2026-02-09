@@ -1,4 +1,5 @@
 import asyncio
+import gc
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -87,6 +88,24 @@ class MetadataFetcher:
                 logger.warning("No papers found")
                 return results
 
+            # Step 1b: Filter out papers already in the database (skip on re-runs)
+            if store_to_db and db_session:
+                paper_repo = PaperRepository(db_session)
+                all_arxiv_ids = [p.arxiv_id for p in papers]
+                existing_ids = paper_repo.get_existing_arxiv_ids(all_arxiv_ids)
+                
+                if existing_ids:
+                    papers = [p for p in papers if p.arxiv_id not in existing_ids]
+                    results["papers_skipped"] = len(existing_ids)
+                    logger.info(
+                        f"Skipping {len(existing_ids)} papers already in DB, "
+                        f"{len(papers)} new papers to process"
+                    )
+                
+                if not papers:
+                    logger.info("All papers already in database, nothing to process")
+                    return results
+
             # Step 2: Process each paper SEQUENTIALLY
             # This prevents memory accumulation and ensures immediate persistence
             logger.info(f"Step 2: Processing {len(papers)} papers sequentially...")
@@ -97,9 +116,11 @@ class MetadataFetcher:
                 try:
                     parsed_content = None
                     
+                    pdf_path = None
+                    
                     # 2a: Download PDF
                     if process_pdfs:
-                        pdf_path = await self.arxiv_client.download_pdf(paper, use_cache=True)
+                        pdf_path = await self.arxiv_client.download_pdf(paper, force_download=False)
                         if pdf_path:
                             results["pdfs_downloaded"] += 1
                             
@@ -135,8 +156,16 @@ class MetadataFetcher:
                         except Exception as os_err:
                             logger.error(f"  OpenSearch error: {os_err}")
                     
-                    # Clear references to free memory
+                    # 2e: Aggressive memory cleanup after each paper
                     del parsed_content
+                    if pdf_path and pdf_path.exists():
+                        try:
+                            pdf_path.unlink()  # Delete PDF file to free disk
+                            logger.debug(f"  Cleaned up PDF: {pdf_path.name}")
+                        except OSError:
+                            pass
+                    del pdf_path
+                    gc.collect()  # Force garbage collection to reclaim Docling memory
                     
                 except Exception as paper_err:
                     error_msg = f"Error processing {paper.arxiv_id}: {str(paper_err)}"

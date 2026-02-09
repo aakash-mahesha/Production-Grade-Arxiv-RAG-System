@@ -8,9 +8,10 @@ from src.db.factory import make_database
 from src.services.arxiv.factory import make_arxiv_client
 from src.services.pdf_parser.factory import make_pdf_parser_service
 from src.services.opensearch.factory import make_opensearch_client
-from src.routers import search
 # Week 1: No complex middleware needed
-from src.routers import ask, papers, ping
+from src.routers import hybrid_search, papers, ping  # Changed from search to hybrid_search
+from src.services.embeddings.factory import make_embeddings_client
+
 
 # Setup logging
 logging.basicConfig(
@@ -38,20 +39,24 @@ async def lifespan(app: FastAPI):
     app.state.pdf_parser = make_pdf_parser_service()
     app.state.llm_service = None
     app.state.opensearch_client = make_opensearch_client()
+    app.state.embeddings_client = make_embeddings_client()
     if app.state.opensearch_client.health_check():
         logger.info("OpenSearch connected successfully")
 
         # Ensure index exists
-        if app.state.opensearch_client.create_index(force=False):
-            logger.info("OpenSearch index created")
+        setup_results = app.state.opensearch_client.setup_indices(force=False)
+        if setup_results.get("hybrid_index"):
+            logger.info("Hybrid index created")
         else:
-            logger.info("OpenSearch index already exists")
+            logger.info("Hybrid index already exists")
 
-        # Get index statistics
-        stats = app.state.opensearch_client.get_index_stats()
-        logger.info(f"OpenSearch ready: {stats.get('document_count', 0)} documents indexed")
+        try:
+            stats = app.state.opensearch_client.client.count(index=app.state.opensearch_client.index_name)
+            logger.info(f"OpenSearch ready: {stats['count']} documents indexed")
+        except Exception:
+            logger.info("OpenSearch index ready")
     else:
-        logger.warning("OpenSearch connection failed - search features will be limited")
+        logger.warning("OpenSearch connection failed")
  
     logger.info("Services initialized: arXiv API client, PDF parser")
 
@@ -73,7 +78,7 @@ app = FastAPI(
 # Include routers
 app.include_router(ping.router, prefix="/api/v1")
 app.include_router(papers.router, prefix="/api/v1")
-app.include_router(search.router, prefix="/api/v1")
+app.include_router(hybrid_search.router, prefix="/api/v1")
 
 
 if __name__ == "__main__":

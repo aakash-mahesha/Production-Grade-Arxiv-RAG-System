@@ -10,6 +10,7 @@ from src.db.interfaces.base import BaseDatabase
 from src.services.arxiv.client import ArxivClient
 from src.services.pdf_parser.parser import PDFParserService
 from src.services.opensearch.client import OpenSearchClient
+from src.services.embeddings.jina_client import JinaEmbeddingsClient
 
 # Week 1: Simplified - no API key authentication needed for local learning
 
@@ -58,6 +59,10 @@ def get_llm_service(request: Request):
     # Phase 3: Will return actual LLM service
     return None
 
+def get_embeddings_client(request: Request) -> JinaEmbeddingsClient:
+    """Get embeddings client from app state."""
+    return request.app.state.embeddings_client
+
 
 # Dependency type aliases for better type hints
 SettingsDep = Annotated[Settings, Depends(get_settings)]
@@ -66,6 +71,7 @@ SessionDep = Annotated[Session, Depends(get_db_session)]
 PDFParserServiceDep = Annotated[object, Depends(get_pdf_parser)]
 ArxivClientDep = Annotated[ArxivClient, Depends(get_arxiv_client)]
 OpenSearchServiceDep = Annotated[object, Depends(get_opensearch_service)]
+EmbeddingsServiceDep = Annotated[JinaEmbeddingsClient, Depends(get_embeddings_client)]
 
 # Phase 3: LLM service dependency (not used in Phase 2)
 # LLMServiceDep = Annotated[object, Depends(get_llm_service)]

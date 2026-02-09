@@ -34,6 +34,18 @@ class SearchRequest(BaseModel):
     )
 
 
+class HybridSearchRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=500)
+    size: int = Field(10, ge=1, le=100)
+    from_: int = Field(0, ge=0, alias="from")
+    categories: Optional[List[str]] = Field(None)
+    latest_papers: bool = Field(False)
+    use_hybrid: bool = Field(True, description="Enable hybrid search (BM25 + vector)")
+    min_score: float = Field(0.0, ge=0.0)
+
+    class Config:
+        populate_by_name = True
+
 class SearchHit(BaseModel):
     """Individual search result."""
 
@@ -45,6 +57,9 @@ class SearchHit(BaseModel):
     pdf_url: Optional[str]
     score: float
     highlights: Optional[dict] = None
+    chunk_text: Optional[str] = Field(None)
+    chunk_id: Optional[str] = Field(None)
+    section_name: Optional[str] = Field(None)
 
 
 class SearchResponse(BaseModel):
@@ -54,3 +69,10 @@ class SearchResponse(BaseModel):
     total: int
     hits: List[SearchHit]
     error: Optional[str] = None
+    size: int = Field(description="Number of results requested")
+    from_: int = Field(alias="from")
+    search_mode: Optional[str] = Field(None)  # "bm25", "vector", or "hybrid"
+    error: Optional[str] = None
+
+    class Config:
+        populate_by_name = True

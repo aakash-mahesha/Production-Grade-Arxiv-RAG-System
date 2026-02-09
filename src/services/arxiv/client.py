@@ -91,8 +91,8 @@ class ArxivClient:
             # Convert dates to arXiv format (YYYYMMDDHHMM) - use 0000 for start of day, 2359 for end
             date_from = f"{from_date}0000" if from_date else "*"
             date_to = f"{to_date}2359" if to_date else "*"
-            # Use correct arXiv API syntax with + symbols
-            search_query += f" AND submittedDate:[{date_from}+TO+{date_to}]"
+            # arXiv API requires spaces (not +) around TO, brackets will be URL-encoded
+            search_query += f" AND submittedDate:[{date_from} TO {date_to}]"
 
         params = {
             "search_query": search_query,
@@ -102,7 +102,8 @@ class ArxivClient:
             "sortOrder": sort_order,
         }
 
-        safe = ":+[]"  # Don't encode :, +, [, ] characters needed for arXiv queries
+        # Only keep : and * as safe characters; let brackets [] and spaces be URL-encoded
+        safe = ":*"
         url = f"{self.base_url}?{urlencode(params, quote_via=quote, safe=safe)}"
 
         try:
@@ -179,7 +180,8 @@ class ArxivClient:
             "sortOrder": sort_order,
         }
 
-        safe = ":+[]*"  # Don't encode :, +, [, ], *, characters needed for arXiv queries
+        # Only keep : and * as safe characters; let brackets [] and spaces be URL-encoded
+        safe = ":*"
         url = f"{self.base_url}?{urlencode(params, quote_via=quote, safe=safe)}"
 
         try:
@@ -226,7 +228,8 @@ class ArxivClient:
         clean_id = arxiv_id.split("v")[0] if "v" in arxiv_id else arxiv_id
         params = {"id_list": clean_id, "max_results": 1}
 
-        safe = ":+[]*"  # Don't encode :, +, [, ], *, characters needed for arXiv queries
+        # Only keep : and * as safe characters
+        safe = ":*"
         url = f"{self.base_url}?{urlencode(params, quote_via=quote, safe=safe)}"
 
         try:

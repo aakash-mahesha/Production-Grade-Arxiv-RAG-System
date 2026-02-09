@@ -41,6 +41,16 @@ class PDFParserSettings(DefaultSettings):
     do_ocr: bool = False
     do_table_structure: bool = True
 
+class ChunkingSettings(DefaultSettings):
+    """chunking settings"""
+    model_config = SettingsConfigDict(
+        env_file=[".env", str(ENV_FILE_PATH)],
+        env_prefix="CHUNKING__",
+        extra="ignore",
+        frozen=True,
+        case_sensitive=False,
+    )
+
 class OpenSearchSettings(DefaultSettings):
     """Opensearch settings"""
     model_config = SettingsConfigDict(
@@ -53,7 +63,17 @@ class OpenSearchSettings(DefaultSettings):
 
     host: str = "http://opensearch:9200"  # Docker service name for container-to-container
     index_name: str = "arxiv-papers"
+    chunk_index_suffix: str = "chunks"
     max_text_size: int = 1000000  # Max chars of raw_text to index
+
+    #Vector search settings
+    vector_dimension: int = 1024 # Jina embeddings dimension
+    vector_space_type: str = "cosinesiml" # cosinesimil, l2, innerproduct
+
+    # Hybrid search settings
+    rrf_pipeline_name: str = "hybrid-rrf-pipeline"
+    hybrid_search_size_multiplier: int = 2 # Get k* multiplier for better recall
+
 
 class Settings(DefaultSettings):
     app_version: str = "0.0.1"
@@ -66,16 +86,16 @@ class Settings(DefaultSettings):
     postgres_pool_size: int = 20
     postgres_max_overflow: int = 0
 
-    opensearch_host: str = Field(default="http://opensearch:9200")
-
     ollama_host: str = Field(default="http://localhost:11434")
     ollama_models: list[str] = Field(default=["llama3.2:1b"])
     ollama_default_model: str = Field(default="llama3.2:1b")
     ollama_timeout: int = 300
 
+    jina_api_key: str = ""
+
     arxiv: ArxivSettings = Field(default_factory=ArxivSettings)
     pdf_parser: PDFParserSettings = Field(default_factory=PDFParserSettings)
-
+    chunking: ChunkingSettings = Field(default_factory=ChunkingSettings)
     opensearch: OpenSearchSettings = Field(default_factory=OpenSearchSettings)
 
     @field_validator("ollama_models", mode = "before")
