@@ -38,3 +38,21 @@ class AskResponse(BaseModel):
     sources: List[str] = Field(default_factory=list, description="Source PDF URLs used for the answer")
     chunks_used: int = Field(default=0, description="Number of chunks used as context")
     search_mode: str = Field(default="hybrid", description="Search mode used: bm25, vector, or hybrid")
+
+
+class AgenticAskResponse(BaseModel):
+    """Response schema for the agentic RAG endpoint (Week 7)."""
+
+    query: str = Field(..., description="Original question")
+    answer: str = Field(..., description="Answer to the question")
+    sources: List[str] = Field(default_factory=list, description="Source PDF URLs used for the answer")
+    chunks_used: int = Field(default=0, description="Number of relevant chunks used as context")
+    search_mode: str = Field(default="hybrid", description="Search mode used: bm25 or hybrid")
+    reasoning_steps: List[str] = Field(
+        default_factory=list, description="Trace of the agent's decisions"
+    )
+    guardrail_score: int = Field(default=0, description="Domain relevance score (0-100)")
+    retrieval_attempts: int = Field(default=0, description="Number of retrieval passes run")
+    rewritten_query: Optional[str] = Field(
+        default=None, description="Final rewritten query, if the agent rewrote it"
+    )

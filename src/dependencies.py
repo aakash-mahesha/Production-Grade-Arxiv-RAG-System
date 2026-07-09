@@ -11,6 +11,7 @@ from src.services.arxiv.client import ArxivClient
 from src.services.pdf_parser.parser import PDFParserService
 from src.services.opensearch.client import OpenSearchClient
 from src.services.embeddings.jina_client import JinaEmbeddingsClient
+from src.services.agents.agentic_rag import AgenticRAGService
 from src.services.cache.cache import RAGCache
 from src.services.llm.factory import LLMClient, make_llm_client
 from src.services.observability.tracer import RAGTracer
@@ -76,6 +77,11 @@ def get_cache(request: Request) -> RAGCache:
     return request.app.state.cache
 
 
+def get_agentic_service(request: Request) -> AgenticRAGService:
+    """Get the agentic RAG service from app state (Week 7)."""
+    return request.app.state.agentic_service
+
+
 # Dependency type aliases for better type hints
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 DatabaseDep = Annotated[BaseDatabase, Depends(get_database)]
@@ -87,3 +93,4 @@ EmbeddingsServiceDep = Annotated[JinaEmbeddingsClient, Depends(get_embeddings_cl
 LLMServiceDep = Annotated[LLMClient, Depends(get_llm_service)]
 TracerDep = Annotated[RAGTracer, Depends(get_tracer)]
 CacheDep = Annotated[RAGCache, Depends(get_cache)]
+AgenticServiceDep = Annotated[AgenticRAGService, Depends(get_agentic_service)]

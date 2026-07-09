@@ -9,7 +9,8 @@ from src.services.arxiv.factory import make_arxiv_client
 from src.services.pdf_parser.factory import make_pdf_parser_service
 from src.services.opensearch.factory import make_opensearch_client
 # Week 1: No complex middleware needed
-from src.routers import ask, hybrid_search, papers, ping
+from src.routers import agentic_ask, ask, hybrid_search, papers, ping
+from src.services.agents.factory import make_agentic_rag_service
 from src.services.cache.factory import make_cache
 from src.services.embeddings.factory import make_embeddings_client
 from src.services.llm.factory import make_llm_client
@@ -45,6 +46,13 @@ async def lifespan(app: FastAPI):
     app.state.embeddings_client = make_embeddings_client()
     app.state.tracer = make_tracer(settings)
     app.state.cache = make_cache(settings)
+    app.state.agentic_service = make_agentic_rag_service(
+        settings=settings,
+        llm_client=app.state.llm_service,
+        opensearch_client=app.state.opensearch_client,
+        embeddings_client=app.state.embeddings_client,
+        tracer=app.state.tracer,
+    )
     if app.state.cache.enabled:
         cache_ok = await app.state.cache.health_check()
         logger.info("Redis cache %s", "connected" if cache_ok else "unreachable (caching off)")
@@ -94,6 +102,7 @@ app.include_router(papers.router, prefix="/api/v1")
 app.include_router(hybrid_search.router, prefix="/api/v1")
 app.include_router(ask.router, prefix="/api/v1")
 app.include_router(ask.stream_router, prefix="/api/v1")
+app.include_router(agentic_ask.router, prefix="/api/v1")
 
 
 if __name__ == "__main__":

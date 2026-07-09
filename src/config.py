@@ -122,6 +122,12 @@ class Settings(DefaultSettings):
     redis_url: str = ""
     cache_ttl_seconds: int = 3600
 
+    # Agentic RAG (Week 7). Controls the LangGraph decision workflow.
+    agent_top_k: int = 5
+    agent_max_retrieval_attempts: int = 2  # how many times the agent may rewrite + retry
+    agent_guardrail_threshold: int = 50  # 0-100 domain-relevance cutoff for in-scope
+    agent_grade_min_relevant: int = 1  # min relevant chunks needed to answer
+
     @property
     def langfuse_enabled(self) -> bool:
         """Tracing is active only when both Langfuse keys are configured."""
