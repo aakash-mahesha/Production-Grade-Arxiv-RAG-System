@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Dict, List, Optional
 
@@ -63,10 +64,7 @@ class HybridIndexingService:
 
             # Step 2: Generate embeddings for chunks
             chunk_texts = [chunk.text for chunk in chunks]
-            embeddings = await self.embeddings_client.embed_passages(
-                texts=chunk_texts,
-                batch_size=50,  # Process in batches
-            )
+            embeddings = await self.embeddings_client.embed_passages(texts=chunk_texts)
 
             if len(embeddings) != len(chunks):
                 logger.error(f"Embedding count mismatch: {len(embeddings)} != {len(chunks)}")
@@ -139,6 +137,9 @@ class HybridIndexingService:
 
             # Index the paper
             stats = await self.index_paper(paper)
+
+            # Brief pause between papers to stay under Jina RPM/TPM limits
+            await asyncio.sleep(0.5)
 
             # Update totals
             total_stats["papers_processed"] += 1

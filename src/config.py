@@ -1,5 +1,4 @@
-from typing import List
-from pydantic import Field, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
@@ -42,7 +41,8 @@ class PDFParserSettings(DefaultSettings):
     do_table_structure: bool = True
 
 class ChunkingSettings(DefaultSettings):
-    """chunking settings"""
+    """Chunking settings for text indexing."""
+
     model_config = SettingsConfigDict(
         env_file=[".env", str(ENV_FILE_PATH)],
         env_prefix="CHUNKING__",
@@ -50,6 +50,10 @@ class ChunkingSettings(DefaultSettings):
         frozen=True,
         case_sensitive=False,
     )
+
+    chunk_size: int = 600
+    overlap_size: int = 100
+    min_chunk_size: int = 100
 
 class OpenSearchSettings(DefaultSettings):
     """Opensearch settings"""
@@ -86,24 +90,27 @@ class Settings(DefaultSettings):
     postgres_pool_size: int = 20
     postgres_max_overflow: int = 0
 
-    ollama_host: str = Field(default="http://localhost:11434")
-    ollama_models: list[str] = Field(default=["llama3.2:1b"])
-    ollama_default_model: str = Field(default="llama3.2:1b")
+    llm_provider: str = Field(default="ollama", description="LLM provider: ollama or openrouter")
+
+    ollama_host: str = Field(default="http://ollama:11434")
+    ollama_model: str = Field(default="llama3.2")
     ollama_timeout: int = 300
 
+    openrouter_api_key: str = ""
+    openrouter_base_url: str = Field(default="https://openrouter.ai/api/v1")
+    openrouter_model: str = Field(default="meta-llama/llama-3.2-3b-instruct")
+    openrouter_timeout: int = 300
+    openrouter_app_name: str = Field(default="arXiv Paper Curator")
+    openrouter_app_url: str = Field(default="http://localhost:8000")
+
     jina_api_key: str = ""
+    jina_batch_size: int = 16
+    jina_request_delay: float = 0.7
 
     arxiv: ArxivSettings = Field(default_factory=ArxivSettings)
     pdf_parser: PDFParserSettings = Field(default_factory=PDFParserSettings)
     chunking: ChunkingSettings = Field(default_factory=ChunkingSettings)
     opensearch: OpenSearchSettings = Field(default_factory=OpenSearchSettings)
-
-    @field_validator("ollama_models", mode = "before")
-    @classmethod
-    def parse_ollama_models(cls, value: str) -> list[str]:
-        if isinstance(value, str):
-            return [model.strip() for model in value.split(",") if model.strip()]
-        return value
 
 def get_settings() -> Settings:
     return Settings()

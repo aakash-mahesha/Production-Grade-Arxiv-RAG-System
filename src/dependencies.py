@@ -11,6 +11,7 @@ from src.services.arxiv.client import ArxivClient
 from src.services.pdf_parser.parser import PDFParserService
 from src.services.opensearch.client import OpenSearchClient
 from src.services.embeddings.jina_client import JinaEmbeddingsClient
+from src.services.llm.factory import LLMClient, make_llm_client
 
 # Week 1: Simplified - no API key authentication needed for local learning
 
@@ -54,10 +55,9 @@ def get_opensearch_service(request: Request) -> OpenSearchClient:
 
 
 # Phase 3: LLM service (skeleton only)
-def get_llm_service(request: Request):
-    """Get LLM service from app state (Phase 3 - not implemented yet)."""
-    # Phase 3: Will return actual LLM service
-    return None
+def get_llm_service(request: Request) -> LLMClient:
+    """Get LLM service from app state."""
+    return request.app.state.llm_service
 
 def get_embeddings_client(request: Request) -> JinaEmbeddingsClient:
     """Get embeddings client from app state."""
@@ -72,6 +72,4 @@ PDFParserServiceDep = Annotated[object, Depends(get_pdf_parser)]
 ArxivClientDep = Annotated[ArxivClient, Depends(get_arxiv_client)]
 OpenSearchServiceDep = Annotated[object, Depends(get_opensearch_service)]
 EmbeddingsServiceDep = Annotated[JinaEmbeddingsClient, Depends(get_embeddings_client)]
-
-# Phase 3: LLM service dependency (not used in Phase 2)
-# LLMServiceDep = Annotated[object, Depends(get_llm_service)]
+LLMServiceDep = Annotated[LLMClient, Depends(get_llm_service)]

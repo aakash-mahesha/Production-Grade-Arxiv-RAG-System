@@ -22,6 +22,14 @@ class LLMException(Exception):
     """Base exception for LLM-related errors."""
 
 
+class LLMConnectionError(LLMException):
+    """Exception raised when LLM service connection fails."""
+
+
+class LLMTimeoutError(LLMException):
+    """Exception raised when LLM service request times out."""
+
+
 class ConfigurationError(Exception):
     """Exception raised when configuration is invalid."""
 

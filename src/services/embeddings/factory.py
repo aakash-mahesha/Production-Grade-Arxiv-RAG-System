@@ -17,6 +17,15 @@ def make_embeddings_client(settings: Optional[Settings] = None) -> JinaEmbedding
         settings = get_settings()
 
     # Get API key from settings
-    api_key = settings.jina_api_key
+    api_key = settings.jina_api_key.strip()
+    if not api_key:
+        raise ValueError(
+            "JINA_API_KEY is not set. Add it to .env and pass it to the container "
+            "(e.g. JINA_API_KEY=... in compose.yaml environment)."
+        )
 
-    return JinaEmbeddingsClient(api_key=api_key)
+    return JinaEmbeddingsClient(
+        api_key=api_key,
+        batch_size=settings.jina_batch_size,
+        request_delay=settings.jina_request_delay,
+    )

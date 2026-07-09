@@ -46,6 +46,12 @@ test: ## Run tests
 test-cov: ## Run tests with coverage
 	uv run pytest --cov=src --cov-report=html
 
+gradio: ## Launch Gradio chat UI on port 7861
+	uv run python gradio_launcher.py
+
+test-ask: ## Test RAG /ask endpoint
+	uv run python scripts/test_ask.py "What is transformer attention?"
+
 # Cleanup
 clean: ## Clean up everything
 	docker compose down -v

@@ -9,8 +9,9 @@ from src.services.arxiv.factory import make_arxiv_client
 from src.services.pdf_parser.factory import make_pdf_parser_service
 from src.services.opensearch.factory import make_opensearch_client
 # Week 1: No complex middleware needed
-from src.routers import hybrid_search, papers, ping  # Changed from search to hybrid_search
+from src.routers import ask, hybrid_search, papers, ping
 from src.services.embeddings.factory import make_embeddings_client
+from src.services.llm.factory import make_llm_client
 
 
 # Setup logging
@@ -37,7 +38,7 @@ async def lifespan(app: FastAPI):
     # Placeholders for future weeks
     app.state.arxiv_client = make_arxiv_client()
     app.state.pdf_parser = make_pdf_parser_service()
-    app.state.llm_service = None
+    app.state.llm_service = make_llm_client(settings)
     app.state.opensearch_client = make_opensearch_client()
     app.state.embeddings_client = make_embeddings_client()
     if app.state.opensearch_client.health_check():
@@ -58,7 +59,10 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("OpenSearch connection failed")
  
-    logger.info("Services initialized: arXiv API client, PDF parser")
+    logger.info(
+        "Services initialized: arXiv API client, PDF parser, LLM (%s)",
+        settings.llm_provider,
+    )
 
     logger.info("API ready")
     yield
@@ -79,6 +83,8 @@ app = FastAPI(
 app.include_router(ping.router, prefix="/api/v1")
 app.include_router(papers.router, prefix="/api/v1")
 app.include_router(hybrid_search.router, prefix="/api/v1")
+app.include_router(ask.router, prefix="/api/v1")
+app.include_router(ask.stream_router, prefix="/api/v1")
 
 
 if __name__ == "__main__":
