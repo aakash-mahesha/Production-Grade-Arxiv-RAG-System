@@ -10,6 +10,11 @@ from src.db.interfaces.base import BaseDatabase
 from src.services.arxiv.client import ArxivClient
 from src.services.pdf_parser.parser import PDFParserService
 from src.services.opensearch.client import OpenSearchClient
+from src.services.embeddings.jina_client import JinaEmbeddingsClient
+from src.services.agents.agentic_rag import AgenticRAGService
+from src.services.cache.cache import RAGCache
+from src.services.llm.factory import LLMClient, make_llm_client
+from src.services.observability.tracer import RAGTracer
 
 # Week 1: Simplified - no API key authentication needed for local learning
 
@@ -53,10 +58,28 @@ def get_opensearch_service(request: Request) -> OpenSearchClient:
 
 
 # Phase 3: LLM service (skeleton only)
-def get_llm_service(request: Request):
-    """Get LLM service from app state (Phase 3 - not implemented yet)."""
-    # Phase 3: Will return actual LLM service
-    return None
+def get_llm_service(request: Request) -> LLMClient:
+    """Get LLM service from app state."""
+    return request.app.state.llm_service
+
+def get_embeddings_client(request: Request) -> JinaEmbeddingsClient:
+    """Get embeddings client from app state."""
+    return request.app.state.embeddings_client
+
+
+def get_tracer(request: Request) -> RAGTracer:
+    """Get the Langfuse RAG tracer from app state (Week 6)."""
+    return request.app.state.tracer
+
+
+def get_cache(request: Request) -> RAGCache:
+    """Get the Redis response cache from app state (Week 6)."""
+    return request.app.state.cache
+
+
+def get_agentic_service(request: Request) -> AgenticRAGService:
+    """Get the agentic RAG service from app state (Week 7)."""
+    return request.app.state.agentic_service
 
 
 # Dependency type aliases for better type hints
@@ -66,6 +89,8 @@ SessionDep = Annotated[Session, Depends(get_db_session)]
 PDFParserServiceDep = Annotated[object, Depends(get_pdf_parser)]
 ArxivClientDep = Annotated[ArxivClient, Depends(get_arxiv_client)]
 OpenSearchServiceDep = Annotated[object, Depends(get_opensearch_service)]
-
-# Phase 3: LLM service dependency (not used in Phase 2)
-# LLMServiceDep = Annotated[object, Depends(get_llm_service)]
+EmbeddingsServiceDep = Annotated[JinaEmbeddingsClient, Depends(get_embeddings_client)]
+LLMServiceDep = Annotated[LLMClient, Depends(get_llm_service)]
+TracerDep = Annotated[RAGTracer, Depends(get_tracer)]
+CacheDep = Annotated[RAGCache, Depends(get_cache)]
+AgenticServiceDep = Annotated[AgenticRAGService, Depends(get_agentic_service)]

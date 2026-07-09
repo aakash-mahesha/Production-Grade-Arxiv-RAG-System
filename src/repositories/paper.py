@@ -60,6 +60,13 @@ class PaperRepository:
         )
         return list(self.session.scalars(stmt))
 
+    def get_existing_arxiv_ids(self, arxiv_ids: List[str]) -> set:
+        """Return the set of arxiv_ids that already exist in the database."""
+        if not arxiv_ids:
+            return set()
+        stmt = select(Paper.arxiv_id).where(Paper.arxiv_id.in_(arxiv_ids))
+        return set(self.session.scalars(stmt))
+
     def get_count(self) -> int:
         """Get total count of papers."""
         stmt = select(func.count(Paper.id))

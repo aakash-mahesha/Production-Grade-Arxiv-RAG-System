@@ -1,8 +1,9 @@
-from .ask import AskRequest, AskResponse, PaperSource
+from .ask import AgenticAskResponse, AskRequest, AskResponse, PaperSource
 from .api.health import HealthResponse
 from .arxiv.paper import PaperCreate, PaperResponse, PaperSearchResponse, ArxivPaper
 
 __all__ = [
+    "AgenticAskResponse",
     "AskRequest",
     "AskResponse",
     "PaperSource",

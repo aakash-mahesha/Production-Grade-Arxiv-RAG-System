@@ -1,12 +1,24 @@
-from typing import List
+from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 
 class AskRequest(BaseModel):
     """Request schema for asking questions about papers."""
 
-    question: str = Field(..., description="Question to ask about arXiv papers")
+    model_config = ConfigDict(populate_by_name=True)
+
+    question: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+        validation_alias=AliasChoices("question", "query"),
+        description="Question to ask about arXiv papers",
+    )
+    use_hybrid: bool = Field(default=True, description="Use hybrid BM25 + vector search")
+    top_k: int = Field(default=5, ge=1, le=20, description="Number of chunks to retrieve")
+    categories: Optional[List[str]] = Field(default=None, description="Filter by arXiv categories")
+    model: Optional[str] = Field(default=None, description="LLM model override (Ollama or OpenRouter)")
 
 
 class PaperSource(BaseModel):
@@ -14,12 +26,33 @@ class PaperSource(BaseModel):
 
     arxiv_id: str = Field(..., description="arXiv paper ID")
     title: str = Field(..., description="Paper title")
-    authors: List[str] = Field(..., description="List of paper authors")
-    abstract_preview: str = Field(..., description="Preview of paper abstract")
+    authors: List[str] = Field(default_factory=list, description="List of paper authors")
+    abstract_preview: str = Field(default="", description="Preview of paper abstract")
 
 
 class AskResponse(BaseModel):
     """Response schema for question answering endpoints."""
 
+    query: str = Field(..., description="Original question")
     answer: str = Field(..., description="Answer to the question")
-    sources: List[PaperSource] = Field(..., description="Source papers used for the answer")
+    sources: List[str] = Field(default_factory=list, description="Source PDF URLs used for the answer")
+    chunks_used: int = Field(default=0, description="Number of chunks used as context")
+    search_mode: str = Field(default="hybrid", description="Search mode used: bm25, vector, or hybrid")
+
+
+class AgenticAskResponse(BaseModel):
+    """Response schema for the agentic RAG endpoint (Week 7)."""
+
+    query: str = Field(..., description="Original question")
+    answer: str = Field(..., description="Answer to the question")
+    sources: List[str] = Field(default_factory=list, description="Source PDF URLs used for the answer")
+    chunks_used: int = Field(default=0, description="Number of relevant chunks used as context")
+    search_mode: str = Field(default="hybrid", description="Search mode used: bm25 or hybrid")
+    reasoning_steps: List[str] = Field(
+        default_factory=list, description="Trace of the agent's decisions"
+    )
+    guardrail_score: int = Field(default=0, description="Domain relevance score (0-100)")
+    retrieval_attempts: int = Field(default=0, description="Number of retrieval passes run")
+    rewritten_query: Optional[str] = Field(
+        default=None, description="Final rewritten query, if the agent rewrote it"
+    )

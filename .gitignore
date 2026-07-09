@@ -26,7 +26,6 @@ share/python-wheels/
 *.egg
 MANIFEST
 data/
-scripts/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -209,6 +208,11 @@ marimo/_lsp/
 __marimo__/
 
 # Project-specific ignores
+.DS_Store
+.gradio/
+# Generated evaluation outputs (not source)
+scripts/ragas_results.json
+scripts/ragas_multi_model_results.json
 exporting
 airflow/airflow.cfg
 airflow/*.generated

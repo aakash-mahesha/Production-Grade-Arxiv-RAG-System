@@ -1,5 +1,4 @@
-from typing import List
-from pydantic import Field, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
@@ -41,6 +40,21 @@ class PDFParserSettings(DefaultSettings):
     do_ocr: bool = False
     do_table_structure: bool = True
 
+class ChunkingSettings(DefaultSettings):
+    """Chunking settings for text indexing."""
+
+    model_config = SettingsConfigDict(
+        env_file=[".env", str(ENV_FILE_PATH)],
+        env_prefix="CHUNKING__",
+        extra="ignore",
+        frozen=True,
+        case_sensitive=False,
+    )
+
+    chunk_size: int = 600
+    overlap_size: int = 100
+    min_chunk_size: int = 100
+
 class OpenSearchSettings(DefaultSettings):
     """Opensearch settings"""
     model_config = SettingsConfigDict(
@@ -53,7 +67,17 @@ class OpenSearchSettings(DefaultSettings):
 
     host: str = "http://opensearch:9200"  # Docker service name for container-to-container
     index_name: str = "arxiv-papers"
+    chunk_index_suffix: str = "chunks"
     max_text_size: int = 1000000  # Max chars of raw_text to index
+
+    #Vector search settings
+    vector_dimension: int = 1024 # Jina embeddings dimension
+    vector_space_type: str = "cosinesiml" # cosinesimil, l2, innerproduct
+
+    # Hybrid search settings
+    rrf_pipeline_name: str = "hybrid-rrf-pipeline"
+    hybrid_search_size_multiplier: int = 2 # Get k* multiplier for better recall
+
 
 class Settings(DefaultSettings):
     app_version: str = "0.0.1"
@@ -66,24 +90,58 @@ class Settings(DefaultSettings):
     postgres_pool_size: int = 20
     postgres_max_overflow: int = 0
 
-    opensearch_host: str = Field(default="http://opensearch:9200")
+    llm_provider: str = Field(default="ollama", description="LLM provider: ollama or openrouter")
 
-    ollama_host: str = Field(default="http://localhost:11434")
-    ollama_models: list[str] = Field(default=["llama3.2:1b"])
-    ollama_default_model: str = Field(default="llama3.2:1b")
+    ollama_host: str = Field(default="http://ollama:11434")
+    ollama_model: str = Field(default="llama3.2")
     ollama_timeout: int = 300
+
+    openrouter_api_key: str = ""
+    openrouter_base_url: str = Field(default="https://openrouter.ai/api/v1")
+    openrouter_model: str = Field(default="meta-llama/llama-3.2-3b-instruct")
+    openrouter_timeout: int = 300
+    openrouter_app_name: str = Field(default="arXiv Paper Curator")
+    openrouter_app_url: str = Field(default="http://localhost:8000")
+
+    jina_api_key: str = ""
+    jina_batch_size: int = 16
+    jina_request_delay: float = 0.7
+
+    # Langfuse observability (Week 6). Tracing is a no-op unless both keys are set.
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_host: str = Field(default="https://us.cloud.langfuse.com")
+
+    # RAGAS evaluation (Week 6). Judge LLM runs through OpenRouter (OpenAI-compatible),
+    # so any OpenRouter model id works: openai/gpt-4o-mini, anthropic/claude-sonnet-5, etc.
+    # Reuses openrouter_api_key + openrouter_base_url above. Embeddings reuse jina_api_key.
+    ragas_judge_model: str = Field(default="openai/gpt-4o-mini")
+    ragas_embedding_model: str = Field(default="jina-embeddings-v3")
+
+    # Redis exact-match response cache (Week 6). Disabled when redis_url is blank.
+    redis_url: str = ""
+    cache_ttl_seconds: int = 3600
+
+    # Agentic RAG (Week 7). Controls the LangGraph decision workflow.
+    agent_top_k: int = 5
+    agent_max_retrieval_attempts: int = 2  # how many times the agent may rewrite + retry
+    agent_guardrail_threshold: int = 50  # 0-100 domain-relevance cutoff for in-scope
+    agent_grade_min_relevant: int = 1  # min relevant chunks needed to answer
+
+    @property
+    def langfuse_enabled(self) -> bool:
+        """Tracing is active only when both Langfuse keys are configured."""
+        return bool(self.langfuse_public_key and self.langfuse_secret_key)
+
+    @property
+    def cache_enabled(self) -> bool:
+        """Response caching is active only when a Redis URL is configured."""
+        return bool(self.redis_url)
 
     arxiv: ArxivSettings = Field(default_factory=ArxivSettings)
     pdf_parser: PDFParserSettings = Field(default_factory=PDFParserSettings)
-
+    chunking: ChunkingSettings = Field(default_factory=ChunkingSettings)
     opensearch: OpenSearchSettings = Field(default_factory=OpenSearchSettings)
-
-    @field_validator("ollama_models", mode = "before")
-    @classmethod
-    def parse_ollama_models(cls, value: str) -> list[str]:
-        if isinstance(value, str):
-            return [model.strip() for model in value.split(",") if model.strip()]
-        return value
 
 def get_settings() -> Settings:
     return Settings()
