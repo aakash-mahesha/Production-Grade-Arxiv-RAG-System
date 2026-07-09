@@ -10,8 +10,9 @@
 [![LangGraph](https://img.shields.io/badge/LangGraph-agentic%20RAG-1C3C3C)](src/services/agents)
 [![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](compose.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](License)
+[![Reference Course](https://img.shields.io/badge/reference-jamwithai%2Fproduction--agentic--rag--course-8A2BE2)](https://github.com/jamwithai/production-agentic-rag-course)
 
-> Follows [jamwithai/production-agentic-rag-course](https://github.com/jamwithai/production-agentic-rag-course) as a reference, hardened and extended — see [Improvements Over the Reference Implementation](#-improvements-over-the-reference-implementation).
+> 📚 **This is a reference/learning project built on top of [jamwithai/production-agentic-rag-course](https://github.com/jamwithai/production-agentic-rag-course).** It follows that course's week-by-week curriculum as the base architecture, then hardens and extends it — see [Improvements Over the Reference Implementation](#-improvements-over-the-reference-implementation) for the specific deltas.
 
 </div>
 
@@ -34,6 +35,8 @@
 - [License](#-license)
 
 ## Overview
+
+This project is a hands-on implementation of the [jamwithai/production-agentic-rag-course](https://github.com/jamwithai/production-agentic-rag-course) curriculum — a week-by-week build of a production RAG system, used here as a reference/learning base rather than a from-scratch design.
 
 The system ingests papers from arXiv, parses PDFs into structured, section-aware chunks, embeds them, and indexes them into OpenSearch for hybrid retrieval. Queries flow through either a **classic RAG** pipeline or an **agentic** LangGraph workflow that adds a relevance guardrail, document grading, and adaptive query rewriting. Every request is traceable in Langfuse, cacheable in Redis, and measurable with RAGAS.
 
