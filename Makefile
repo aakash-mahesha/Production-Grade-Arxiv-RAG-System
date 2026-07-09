@@ -28,6 +28,7 @@ health: ## Check all services health
 	@curl -s http://localhost:9200/_cluster/health | jq . || echo "OpenSearch not responding"
 	@curl -s http://localhost:8080/api/v2/monitor/health || echo "Airflow not responding"
 	@curl -s http://localhost:11434/api/version | jq . || echo "Ollama not responding"
+	@curl -s -o /dev/null -w "Gradio: %{http_code}\n" http://localhost:7861/ || echo "Gradio not responding"
 
 # Development
 setup: ## Install Python dependencies
@@ -46,11 +47,20 @@ test: ## Run tests
 test-cov: ## Run tests with coverage
 	uv run pytest --cov=src --cov-report=html
 
-gradio: ## Launch Gradio chat UI on port 7861
+gradio: ## Start Gradio chat UI in Docker on port 7861
+	docker compose up -d --build gradio
+
+gradio-local: ## Launch Gradio chat UI locally (dev)
 	uv run python gradio_launcher.py
 
 test-ask: ## Test RAG /ask endpoint
 	uv run python scripts/test_ask.py "What is transformer attention?"
+
+eval-ragas: ## Run RAGAS evaluation (faithfulness, relevancy, precision, recall)
+	uv run python scripts/eval_ragas.py
+
+eval-multi: ## Compare RAGAS scores across multiple judge models
+	uv run python scripts/eval_multi_model.py
 
 # Cleanup
 clean: ## Clean up everything

@@ -107,6 +107,31 @@ class Settings(DefaultSettings):
     jina_batch_size: int = 16
     jina_request_delay: float = 0.7
 
+    # Langfuse observability (Week 6). Tracing is a no-op unless both keys are set.
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_host: str = Field(default="https://us.cloud.langfuse.com")
+
+    # RAGAS evaluation (Week 6). Judge LLM runs through OpenRouter (OpenAI-compatible),
+    # so any OpenRouter model id works: openai/gpt-4o-mini, anthropic/claude-sonnet-5, etc.
+    # Reuses openrouter_api_key + openrouter_base_url above. Embeddings reuse jina_api_key.
+    ragas_judge_model: str = Field(default="openai/gpt-4o-mini")
+    ragas_embedding_model: str = Field(default="jina-embeddings-v3")
+
+    # Redis exact-match response cache (Week 6). Disabled when redis_url is blank.
+    redis_url: str = ""
+    cache_ttl_seconds: int = 3600
+
+    @property
+    def langfuse_enabled(self) -> bool:
+        """Tracing is active only when both Langfuse keys are configured."""
+        return bool(self.langfuse_public_key and self.langfuse_secret_key)
+
+    @property
+    def cache_enabled(self) -> bool:
+        """Response caching is active only when a Redis URL is configured."""
+        return bool(self.redis_url)
+
     arxiv: ArxivSettings = Field(default_factory=ArxivSettings)
     pdf_parser: PDFParserSettings = Field(default_factory=PDFParserSettings)
     chunking: ChunkingSettings = Field(default_factory=ChunkingSettings)

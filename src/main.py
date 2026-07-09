@@ -10,8 +10,10 @@ from src.services.pdf_parser.factory import make_pdf_parser_service
 from src.services.opensearch.factory import make_opensearch_client
 # Week 1: No complex middleware needed
 from src.routers import ask, hybrid_search, papers, ping
+from src.services.cache.factory import make_cache
 from src.services.embeddings.factory import make_embeddings_client
 from src.services.llm.factory import make_llm_client
+from src.services.observability.factory import make_tracer
 
 
 # Setup logging
@@ -41,6 +43,11 @@ async def lifespan(app: FastAPI):
     app.state.llm_service = make_llm_client(settings)
     app.state.opensearch_client = make_opensearch_client()
     app.state.embeddings_client = make_embeddings_client()
+    app.state.tracer = make_tracer(settings)
+    app.state.cache = make_cache(settings)
+    if app.state.cache.enabled:
+        cache_ok = await app.state.cache.health_check()
+        logger.info("Redis cache %s", "connected" if cache_ok else "unreachable (caching off)")
     if app.state.opensearch_client.health_check():
         logger.info("OpenSearch connected successfully")
 
@@ -68,6 +75,8 @@ async def lifespan(app: FastAPI):
     yield
 
     # Cleanup
+    app.state.tracer.flush()  # send any buffered traces before exit
+    await app.state.cache.close()
     database.teardown()
     logger.info("API shutdown complete")
 

@@ -1,0 +1,22 @@
+[
+  {
+    "question": "How does the AcMAS framework detect malicious behavior in LLM multi-agent systems?",
+    "ground_truth": "AcMAS is an activation-based framework for malicious-behavior detection in LLM multi-agent systems. Instead of assuming semantically-explicit attacks or relying on explicit graph-based modeling of the system topology, it analyzes the internal reasoning states in the activation space of local agents. This lets it detect even semantically stealthy attacks in a synchronization-robust way, without depending on explicit interaction graphs or temporal alignment across agents."
+  },
+  {
+    "question": "What is 'token maxing' and how does the orchestration harness affect the token economics of enterprise agentic AI?",
+    "ground_truth": "Token maxing is the pattern of buying capability with more tokens (longer reasoning traces, more turns, wider tool payloads, and bigger replayed contexts), so tokens per task grow faster than task value and total spend rises even as per-token prices fall. The paper argues the decisive lever against token maxing is the harness, the orchestration layer that assembles context, exposes tools, sequences turns, and delegates work. In a controlled swap that changed only the orchestration layer while holding the models constant, the harness cut blended cost per task by about 41% and median wall-clock time by about 44%."
+  },
+  {
+    "question": "How does GemNav adapt a multimodal large language model for visual robot navigation?",
+    "ground_truth": "GemNav adapts a frozen Multimodal Large Language Model for short-to-medium horizon waypoint navigation using Low-Rank Adaptation (LoRA) applied to the language tower alone, with no auxiliary visual encoder and no continuous regression head. Waypoints and categorical navigation signals share a single discrete token vocabulary produced by the language-model head, and a soft-decoded auxiliary loss recovers the metric structure that pure cross-entropy training discards. It is trained on a small corpus of roughly 8.7 hours, orders of magnitude smaller than competing training sets."
+  },
+  {
+    "question": "What is the Pyligent framework and what three actions does it train a model to take during reasoning?",
+    "ground_truth": "Pyligent is a training and inference framework that represents reasoning as validated search over partial solution chains rather than a single left-to-right chain. A task validator labels generated continuations and failures, and the resulting search trees are converted into supervised targets for three actions: continue, finish, and backtrack, optionally with traces that summarize abandoned branches. It is designed to handle delayed-failure recovery, where a solver pursues a branch, observes a delayed failure, and returns to the latest prefix that can still be completed."
+  },
+  {
+    "question": "What two agentic architectures are introduced for ARC-AGI-1 and how do they perform?",
+    "ground_truth": "The paper introduces two agentic architectures built on an open-weight model under a strict budget. The Explorer-Definer Pipeline separates pattern discovery from executable transformation synthesis as a two-stage agent pipeline. The Reflective Orchestrator augments the pipeline by letting the agent autonomously spawn fresh exploration of new transformations when previous hypotheses fail on training pairs. On the ARC-AGI-1 public 400-task evaluation set, the pipeline reaches 57.50% pass@2 at $0.25 per task and the orchestrator reaches 67.25% pass@2 at $0.62 per task, together lifting a 15.50% one-shot baseline by roughly 52 points without benchmark-specific training or heavy test-time compute."
+  }
+]

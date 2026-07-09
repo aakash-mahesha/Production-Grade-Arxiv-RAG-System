@@ -11,7 +11,9 @@ from src.services.arxiv.client import ArxivClient
 from src.services.pdf_parser.parser import PDFParserService
 from src.services.opensearch.client import OpenSearchClient
 from src.services.embeddings.jina_client import JinaEmbeddingsClient
+from src.services.cache.cache import RAGCache
 from src.services.llm.factory import LLMClient, make_llm_client
+from src.services.observability.tracer import RAGTracer
 
 # Week 1: Simplified - no API key authentication needed for local learning
 
@@ -64,6 +66,16 @@ def get_embeddings_client(request: Request) -> JinaEmbeddingsClient:
     return request.app.state.embeddings_client
 
 
+def get_tracer(request: Request) -> RAGTracer:
+    """Get the Langfuse RAG tracer from app state (Week 6)."""
+    return request.app.state.tracer
+
+
+def get_cache(request: Request) -> RAGCache:
+    """Get the Redis response cache from app state (Week 6)."""
+    return request.app.state.cache
+
+
 # Dependency type aliases for better type hints
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 DatabaseDep = Annotated[BaseDatabase, Depends(get_database)]
@@ -73,3 +85,5 @@ ArxivClientDep = Annotated[ArxivClient, Depends(get_arxiv_client)]
 OpenSearchServiceDep = Annotated[object, Depends(get_opensearch_service)]
 EmbeddingsServiceDep = Annotated[JinaEmbeddingsClient, Depends(get_embeddings_client)]
 LLMServiceDep = Annotated[LLMClient, Depends(get_llm_service)]
+TracerDep = Annotated[RAGTracer, Depends(get_tracer)]
+CacheDep = Annotated[RAGCache, Depends(get_cache)]

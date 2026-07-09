@@ -16,8 +16,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=/app/pyproject.toml \
     uv sync --frozen --no-dev
 
-# Copy source code
+# Copy source code and Gradio launcher
 COPY src /app/src
+COPY gradio_launcher.py /app/gradio_launcher.py
 
 FROM python:3.12.8-slim AS final
 

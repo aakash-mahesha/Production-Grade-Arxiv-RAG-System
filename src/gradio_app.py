@@ -180,13 +180,16 @@ def create_gradio_interface():
 
 
 def main():
+    server_name = os.getenv("GRADIO_SERVER_NAME", "0.0.0.0")
+    server_port = int(os.getenv("GRADIO_SERVER_PORT", "7861"))
+
     print("Starting arXiv Paper Curator Gradio Interface...")
     print(f"API Base URL: {API_BASE_URL}")
-    print("Open http://localhost:7861 in your browser")
+    print(f"Open http://localhost:{server_port} in your browser")
     interface = create_gradio_interface()
     interface.launch(
-        server_name="0.0.0.0",
-        server_port=7861,
+        server_name=server_name,
+        server_port=server_port,
         share=False,
         theme=gr.themes.Soft(),
     )
